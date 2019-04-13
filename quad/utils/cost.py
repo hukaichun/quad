@@ -14,7 +14,7 @@ def quatarnion_difference(quat1, quat2):
 
 
 def angular_cost(goal, current, keepdims=False):
-    diff = quatarnion_difference(quat1, quat2)
+    diff = quatarnion_difference(goal, current)
     return np.linalg.norm(diff, axis=1, keepdims=keepdims)
 
 def position_cost(goal, current, keepdims=False):
