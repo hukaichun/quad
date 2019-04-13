@@ -18,4 +18,4 @@ def angular_cost(goal, current, keepdims=False):
     return np.linalg.norm(diff, axis=1, keepdims=keepdims)
 
 def position_cost(goal, current, keepdims=False):
-    return np.linalg.norm(qoal-current, axis=1, keepdims=keepdims)
+    return np.linalg.norm(goal-current, axis=1, keepdims=keepdims)
