@@ -68,7 +68,7 @@ class QuadrotorSwarm(Swarm):
         self.position[idxs,2] = r*cos_theta 
 
     def random_v(self, idxs):
-        self.velocity[idxs] = np.random.random(self.quaternion[idxs].shape)-0.5
+        self.velocity[idxs] = np.random.random(self.velocity[idxs].shape)-0.5
         self.velocity[idxs] *= self._random_velocity_radius*2 
 
     def random_w(self,idxs):
