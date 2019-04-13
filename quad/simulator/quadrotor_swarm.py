@@ -72,7 +72,7 @@ class QuadrotorSwarm(Swarm):
         self.velocity[idxs] *= self._random_velocity_radius*2 
 
     def random_w(self,idxs):
-        self.angular_velocity[idxs] = np.random.random(self.self.angular_velocity[idxs])-0.5
+        self.angular_velocity[idxs] = np.random.random(self.angular_velocity[idxs])-0.5
         self.angular_velocity[idxs] *= 2*self.random_angular_velocity_radius
 
 
