@@ -8,7 +8,7 @@ class QuadrotorSwarm(Swarm):
         super().__init__(**kwargs)
         self.set_physical_property()
 
-        self._random_position_radius = 2
+        self._random_position_radius = [0.1,2]
         self._random_velocity_radius = 2
         self._random_angular_velocity_radius = 6
         
@@ -41,26 +41,39 @@ class QuadrotorSwarm(Swarm):
         self.__thrust_2_force_trans_matrix = thrust_2_force
 
 
-    def reset(self, idxs=None):
-        if idxs is None:
-            self.reset_all()
-            return
+    def random(self, idxs):
+        self.random_q(idxs)
+        self.random_p(idxs, *self._random_position_radius)
+        self.random_v(idxs)
+        self.random_w(idxs)
 
-        self.attitude[idxs] = (np.random.random(self.attitude[idxs].shape)-.5)
-        self.position[idxs] *= self._random_position_radius
-        self.angular_velocity[idxs] *= self._random_angular_velocity_radius
-        self.velocity[idxs] *= self._random_velocity_radius
 
+    def random_q(self, idxs):
+        self.quaternion[idxs] = np.random.random(self.quaternion[idxs].shape)-0.5
         self.quaternion[idxs] /= np.linalg.norm(self.quaternion[idxs], axis=1, keepdims=True)
 
+    def random_p(self, idxs, r_min=2, r_max=3):
+        sphereical_coord = np.random.random(self.position[idxs].shape)
+        sphereical_coord *= np.asarray([[r_max-r_min, np.pi, 2*np.pi]]) 
+        sphereical_coord[:,0] += r_min
 
-    def reset_all(self):
-        self.attitude = (np.random.random(self.attitude.shape)-.5)
-        self.position *= self._random_position_radius
-        self.angular_velocity *= self._random_angular_velocity_radius
-        self.velocity *= self._random_velocity_radius
+        r = sphereical_coord[:,0]
+        sin_theta = np.sin(sphereical_coord[:,1])
+        cos_theta = np.cos(sphereical_coord[:,1])
+        sin_phi   = np.sin(sphereical_coord[:,2])
+        cos_phi   = np.cos(sphereical_coord[:,2])
 
-        self.quaternion /= np.linalg.norm(self.quaternion, axis=1, keepdims=True)
+        self.position[idxs,0] = r*sin_theta*cos_phi
+        self.position[idxs,1] = r*sin_theta*sin_phi
+        self.position[idxs,2] = r*cos_theta 
+
+    def random_v(self, idxs):
+        self.velocity[idxs] = np.random.random(self.quaternion[idxs].shape)-0.5
+        self.velocity[idxs] *= self._random_velocity_radius*2 
+
+    def random_w(self,idxs):
+        self.angular_velocity[idxs] = np.random.random(self.self.angular_velocity[idxs])-0.5
+        self.angular_velocity[idxs] *= 2*self.random_angular_velocity_radius
 
 
     def apply_force(self, body_torque, body_force, ext_force = [0,0,0]):
