@@ -1,23 +1,29 @@
-
-from quad.simulator.quadrotor import Quadrotors
-from quad.utils import cost
-
 import numpy as np
-
-num = 10
-quads = Quadrotors(init_num=num)
-quads.reset()
+from quad.gym.hover import Quadrotors
 
 
+def quad_demo(num = 10):
+    
+    quads = Quadrotors(init_num=num)
 
-goal_q = np.asarray([[1,0,0,0]])
-goal_p = np.asarray([[0,0,0]])
-
-
-for _ in range(10):
-    for __ in range(100):
+    s = np.copy(quads.reset())
+    for _ in range(120):
         quads.rander()
-        states = quads.step([[1.6,1.6,1.5,1.5]])
-        print(states)
-        quads.reset([0,1,2])
-    quads.reset()
+        random_act = np.random.random((num,4))+8
+        s_next, r, done, info = quads.step(random_act)
+        if any(done):
+            quads.reset(done)
+
+    quads.bound_radius_out = 3
+    for _ in range(120):
+        quads.rander()
+        random_act = np.random.random((num,4))+8
+        s_next, r, done, info = quads.step(random_act)
+        if any(done):
+            quads.reset(done)
+
+
+        
+if __name__ == "__main__":
+    quad_demo()
+
