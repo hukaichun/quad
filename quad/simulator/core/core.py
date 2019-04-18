@@ -43,9 +43,12 @@ def d_quaternion(angular_acceleration, quaternion):
 
     l = np.shape(w)[0]
 
-    m = np.stack([-i,  w, -k,  j,
-                  -j,  k,  w, -i,
-                  -k, -j,  i,  w], axis = 1)
+    # m = np.stack([-i,  w, -k,  j,
+    #               -j,  k,  w, -i,
+    #               -k, -j,  i,  w], axis = 1)
+    m = np.stack([-i,  w,  k, -j,
+                  -j, -k,  w,  i,
+                  -k,  j, -i,  w], axis = 1)
     m = np.reshape(m, (l, 3, 4)) 
     angular_acceleration_m = np.expand_dims(angular_acceleration, 1)
     dq = np.squeeze(0.5*np.matmul(angular_acceleration_m, m))
