@@ -35,7 +35,7 @@ def quat2rotation_np(quaternion):
 
 
 # d quaternion/ dt 
-def d_quaternion(angular_acceleration, quaternion):
+def d_quaternion(angular_velocity, quaternion):
     w = quaternion[:,0]
     i = quaternion[:,1]
     j = quaternion[:,2]
@@ -50,8 +50,8 @@ def d_quaternion(angular_acceleration, quaternion):
                   -j, -k,  w,  i,
                   -k,  j, -i,  w], axis = 1)
     m = np.reshape(m, (l, 3, 4)) 
-    angular_acceleration_m = np.expand_dims(angular_acceleration, 1)
-    dq = np.squeeze(0.5*np.matmul(angular_acceleration_m, m))
+    angular_velocity_m = np.expand_dims(angular_velocity, 1)
+    dq = np.squeeze(0.5*np.matmul(angular_velocity_m, m))
 
     return dq
 
@@ -101,9 +101,9 @@ def d_state(orientation, position,
     rotation_matrix_t = np.transpose(rotation_matrix,
                                      axes=(0,2,1))
 
-    angular_velocity_m = np.expand_dims(angular_velocity, 1)
-    angular_velocity_body_frame_m = np.matmul(angular_velocity_m, 
-                                              rotation_matrix_t)
+    angular_velocity_body_frame_m = np.expand_dims(angular_velocity, 1)     # use angular velocity in body frame as default
+    # angular_velocity_body_frame_m = np.matmul(angular_velocity_m, 
+    #                                           rotation_matrix_t)
 
     torque_B = np.expand_dims(body_torque,1)
     force_B = np.expand_dims(body_force,1)
@@ -115,15 +115,15 @@ def d_state(orientation, position,
             inertia, 
             inertiaInv
         )
-    alpha = np.matmul(alpha_B, rotation_matrix)
-    alpha = np.squeeze(alpha)
+    alpha_B = np.squeeze(alpha_B)
 
+    #force total rotation matrix
     force_total = np.matmul(force_B,rotation_matrix)+np.expand_dims(external_force,1)
     acceleration = np.squeeze(force_total/mass)
 
     delta_quaternion = d_quaternion(angular_velocity, orientation)
     delta_position = velocity
-    delta_angular_velocity = alpha
+    delta_angular_velocity = alpha_B  # using angular velocity in body frame
     delta_velocity = acceleration
 
     return delta_quaternion, delta_position, delta_angular_velocity, delta_velocity

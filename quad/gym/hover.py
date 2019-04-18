@@ -41,7 +41,7 @@ class Quadrotors(ParticleMonitor, QuadrotorSwarm):
                                                   "ouside_internal": ouside_internal} 
 
 
-    def rander(self):
+    def render(self):
         self.show()
 
 

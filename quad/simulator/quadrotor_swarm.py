@@ -4,21 +4,36 @@ from .core.core import d_state
 import numpy as np
 
 class QuadrotorSwarm(Swarm):
-    def __init__(self,**kwargs):
-        super().__init__(**kwargs)
-        self.set_physical_property()
+    def __init__(self,init_num,
+        length = 0.105,
+        drag_coeff = 0.016,
+        inertia = [0.0023, 0.0025, 0.0037],
+        mass = .667,
+        gravity_acc = [0,0,9.81],
+        deltaT = .01,
+        **kwargs
+    ):
+        super().__init__(init_num)
+        
+        self.set_physical_property(
+            length = length,
+            drag_coeff = drag_coeff,
+            inertia = inertia,
+            mass = mass,
+            gravity_acc = gravity_acc,
+            deltaT = deltaT)
 
         self._random_position_radius = [0.1,2]
         self._random_velocity_radius = 2
         self._random_angular_velocity_radius = 6
         
     def set_physical_property(self,
-        length = 0.105,
-        drag_coeff = 0.016,
-        inertia = [.0026, .0026, .0039],
-        mass = .617,
-        gravity_acc = [0,0,9.81],
-        deltaT = .01
+        length,
+        drag_coeff,
+        inertia,
+        mass,
+        gravity_acc,
+        deltaT
     ):
         inertia = np.diag(inertia)
         inertia_inv = np.linalg.inv(inertia)
@@ -135,7 +150,6 @@ class QuadrotorSwarm(Swarm):
                                    angular_velocity, velocity,
                                    body_torque, body_force, external_force,
                                    self.__inertia, self.__inertia_inv, self.__mass)
-
 
         quaternion       += delta_quaternion*self.__deltaT
         position         += delta_position*self.__deltaT
