@@ -19,6 +19,10 @@ class Quadrotors(ParticleMonitor, QuadrotorSwarm):
 
 
     def step(self,thrust):
+        thrust *= 6
+        thrust += 0.25*self._QuadrotorSwarm__mass
+        thrust = np.clip(thrust, 0, 8)
+
         self.apply_thrust(thrust)
         self.eval
 
