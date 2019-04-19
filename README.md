@@ -1,8 +1,6 @@
 # Quadrotor simulator
-=======================
 
 ## Install
-======================
 ```bach
     git clone <quad.git>
     cd quad
@@ -10,7 +8,6 @@
 ```
 
 ## Usage
-======================
 
 see
 ```bach
