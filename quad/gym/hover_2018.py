@@ -38,8 +38,10 @@ class Quadrotors(ParticleMonitor, QuadrotorSwarm):
 
         self.apply_thrust(thrust)
         self.eval
-        self.angular_velocity = np.clip(self.angular_velocity, -20, 20)
-        self.velocity = np.clip(self.velocity, -5, 5)
+        angular_velocity = self.angular_velocity
+        np.clip(angular_velocity, -20, 20, angular_velocity)
+        velocity = self.velocity
+        np.clip(velocity, -5, 5, velocity)
 
         r_q = cost.angular_cost(self._quaternion_goal, self.quaternion)
         r_p = cost.position_cost(self._position_goal, self.position)
