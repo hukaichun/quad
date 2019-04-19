@@ -1,5 +1,5 @@
 import numpy as np
-from quad.gym.hover import Quadrotors
+from quad.gym.hover_2018 import Quadrotors
 
 
 def quad_demo(num = 10):
