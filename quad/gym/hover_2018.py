@@ -2,7 +2,20 @@ import numpy as np
 
 from quad.simulator.monitor import ParticleMonitor
 from quad.simulator.quadrotor_swarm import QuadrotorSwarm
+from quad.simulator.core.core import quat2rotation_np
 from quad.utils import cost
+
+
+def attitude2state(attitude):
+    quat = attitude[:,:4]
+    roto = quat2rotation_np(quat)
+    roto = np.transpose(roto, axes=(0,2,1))
+    roto_v = roto.reshape((-1,9))
+    pos = attitude[:,4:7]*0.5
+    vs  = attitude[:,7:]*0.15
+    state = np.concatenate([roto_v, vs, pos],axis=1)
+    return state
+
 
 
 class Quadrotors(ParticleMonitor, QuadrotorSwarm):
@@ -18,27 +31,29 @@ class Quadrotors(ParticleMonitor, QuadrotorSwarm):
         self._terminal_radius = [1, 6]
 
 
-    def step(self,thrust):
-        thrust *= 6
-        thrust += 0.25*self._QuadrotorSwarm__mass
+    def step(self,command):
+        thrust = 6*command
+        thrust += 0.25*self._QuadrotorSwarm__mass*9.81
         thrust = np.clip(thrust, 0, 8)
 
         self.apply_thrust(thrust)
         self.eval
+        self.angular_velocity = np.clip(self.angular_velocity, -20, 20)
+        self.velocity = np.clip(self.velocity, -5, 5)
 
         r_q = cost.angular_cost(self._quaternion_goal, self.quaternion)
         r_p = cost.position_cost(self._position_goal, self.position)
+        r_a = np.linalg.norm(command, axis=1, keepdims=False)
 
-        r = r_q + r_p
-        r/=2
+        r = r_q + r_p + r_a 
+        r*=0.002
 
         ouside_internal = r_p < self._terminal_radius[0]
-        ouside_external = r_p > self._terminal_radius[1]
-        terminal_flag = np.logical_or(ouside_internal, ouside_external)
+        terminal_flag = ouside_internal
 
-        return self.attitude, -r, terminal_flag, {"radius": r_p,
-                                                  "ouside_external": ouside_external,
-                                                  "ouside_internal": ouside_internal} 
+        state = attitude2state(self.attitude)
+
+        return state, -r, terminal_flag, None
 
 
     def render(self):
@@ -49,7 +64,7 @@ class Quadrotors(ParticleMonitor, QuadrotorSwarm):
         if idxs is None:
             idxs = self._num*[True]
         self.random(idxs)
-        return self.attitude
+        return attitude2state(self.attitude)
 
 
     @property
