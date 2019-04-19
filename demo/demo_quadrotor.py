@@ -8,7 +8,7 @@ def quad_demo(num = 10):
 
     s = np.copy(quads.reset())
     for _ in range(120):
-        quads.rander()
+        quads.render()
         random_act = np.random.random((num,4))+8
         s_next, r, done, info = quads.step(random_act)
         if any(done):
@@ -16,7 +16,7 @@ def quad_demo(num = 10):
 
     quads.bound_radius_out = 3
     for _ in range(120):
-        quads.rander()
+        quads.render()
         random_act = np.random.random((num,4))+8
         s_next, r, done, info = quads.step(random_act)
         if any(done):
