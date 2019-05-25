@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name = "quad",
-    version = "0.0.0",
+    version = "0.0.1",
     description = "Quadrotor Simulator",
     author = "hu kai chun",
     author_email = "hu.kaichun@gmail.com",
