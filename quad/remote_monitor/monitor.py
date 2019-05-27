@@ -71,9 +71,10 @@ if __name__ == "__main__":
     while True:
         info = s.recv()
         count+=1
-        if count%5 == 0:
+        if count%15 == 0:
             q.attitude = info.attitude
-            q.position = 0
+            q.position = info._info[20:23]
             q.render()
             count = 0
+            print("recved")
 
