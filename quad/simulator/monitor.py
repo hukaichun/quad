@@ -15,6 +15,7 @@ class ParticleMonitor(Swarm):
             model_pts = four_petal(4)
         
         self.skeleton = model_pts
+        self._mark = np.zeros(3)
         self.GUI_init()
 
     def GUI_init(self, name="Quad_Sim"):
@@ -37,6 +38,8 @@ class ParticleMonitor(Swarm):
                                    antialiased=False)[0] 
                      for c in self.colors]
 
+        self._marker, = self.ax.plot([],[],[], linestyle="", marker="o")
+
         plt.tight_layout()
 
 
@@ -50,5 +53,15 @@ class ParticleMonitor(Swarm):
         for idx, ax in zip(range(self.num), self.axs):
             ax.set_data(pts[idx,:,0], pts[idx,:,1])
             ax.set_3d_properties(-pts[idx,:,2])
+        self._marker.set_data(self._mark[0],self._mark[1])
+        self._marker.set_3d_properties(-self._mark[2])
 
         plt.pause(1./600)
+
+    @property
+    def mark(self):
+        return self._mark
+    @mark.setter
+    def mark(self, value):
+        self._mark[:] = value
+        return self._mark 
