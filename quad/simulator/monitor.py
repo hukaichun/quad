@@ -25,6 +25,7 @@ class ParticleMonitor(Swarm):
         self.fig = plt.figure(name)
 
         self.ax = self.fig.add_subplot(111, projection="3d")
+        # self.ax.set_title("Quad_Sim")
         self.ax.set_xlim3d(axes_limit)
         self.ax.set_xlabel('X (m)')
         self.ax.set_ylim3d(axes_limit)
@@ -37,7 +38,8 @@ class ParticleMonitor(Swarm):
                                    linewidth=1,
                                    antialiased=False)[0] 
                      for c in self.colors]
-
+        self.title = self.ax.text(.5,1.005,40,"", transform=self.ax.transAxes)
+        self.title.set_text("Quad_Sim")
         self._marker, = self.ax.plot([],[],[], linestyle="", marker="o")
 
         plt.tight_layout()
