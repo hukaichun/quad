@@ -74,7 +74,7 @@ def d_angular_velocity(torque,
         inertiaInv = np.linalg.inv(inertia)
 
     tmp = torque - np.cross(angular_velocity, np.matmul(angular_velocity, inertia))
-    return np.matmul(tmp, inertiaInv)
+    return np.squeeze(np.matmul(tmp, inertiaInv))
 
 
 #  # d state/ dt      
@@ -115,7 +115,6 @@ def d_state(orientation, position,
             inertia, 
             inertiaInv
         )
-    alpha_B = np.squeeze(alpha_B)
 
     #force total rotation matrix
     force_total = np.matmul(force_B,rotation_matrix)+np.expand_dims(external_force,1)
