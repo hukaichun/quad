@@ -7,8 +7,6 @@ def quat2rotation_np(quaternion):
     j = quaternion[:,2]
     k = quaternion[:,3]
 
-    l = np.shape(w)[0]
-
     ii2 = 2 * i * i
     jj2 = 2 * j * j
     kk2 = 2 * k * k
@@ -30,7 +28,7 @@ def quat2rotation_np(quaternion):
     r_22 = 1. - ii2 - jj2
     
     r_v  = np.stack([r_00, r_01, r_02, r_10, r_11, r_12, r_20, r_21, r_22], axis=1)
-    r    = np.reshape(r_v, (l,3,3))
+    r    = np.reshape(r_v, (-1,3,3))
     return r
 
 
@@ -41,7 +39,6 @@ def d_quaternion(angular_velocity, quaternion):
     j = quaternion[:,2]
     k = quaternion[:,3]
 
-    l = np.shape(w)[0]
 
     # m = np.stack([-i,  w, -k,  j,
     #               -j,  k,  w, -i,
@@ -49,7 +46,7 @@ def d_quaternion(angular_velocity, quaternion):
     m = np.stack([-i,  w,  k, -j,
                   -j, -k,  w,  i,
                   -k,  j, -i,  w], axis = 1)
-    m = np.reshape(m, (l, 3, 4)) 
+    m = np.reshape(m, (-1, 3, 4)) 
     angular_velocity_m = np.expand_dims(angular_velocity, 1)
     dq = np.squeeze(0.5*np.matmul(angular_velocity_m, m))
 
@@ -91,8 +88,8 @@ def d_angular_velocity(torque,
 #      inertia          | (batch, 3, 3) or (3,3)
 #      inertia_inv      | (batch, 3, 3) or (3,3)
 #      mass             | (batch, 1, 1) or ()
-def d_state(orientation, position, 
-            angular_velocity, velocity,
+def d_state(orientation, angular_velocity,
+            position, velocity,
             body_torque, body_force, external_force,
             inertia, inertiaInv, mass):
 
@@ -125,7 +122,7 @@ def d_state(orientation, position,
     delta_angular_velocity = alpha_B  # using angular velocity in body frame
     delta_velocity = acceleration
 
-    return delta_quaternion, delta_position, delta_angular_velocity, delta_velocity
+    return delta_quaternion, delta_angular_velocity, delta_position, delta_velocity
 
 
 if __name__ == "__main__":

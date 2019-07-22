@@ -144,10 +144,10 @@ class QuadrotorSwarm(Swarm):
          external_force) = self.state
 
         (delta_quaternion,
-         delta_position,
          delta_angular_velocity,
-         delta_velocity) = d_state(quaternion,position,
-                                   angular_velocity, velocity,
+         delta_position,
+         delta_velocity) = d_state(quaternion, angular_velocity,
+                                   position, velocity,
                                    body_torque, body_force, external_force,
                                    self.__inertia, self.__inertia_inv, self.__mass)
 
