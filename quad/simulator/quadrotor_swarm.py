@@ -5,10 +5,10 @@ import numpy as np
 
 class QuadrotorSwarm(Swarm):
     def __init__(self,init_num,
-        length = 0.105,
-        drag_coeff = 0.016,
-        inertia = [0.0023, 0.0025, 0.0037],
-        mass = .667,
+        length,
+        drag_coeff,
+        inertia,
+        mass,
         gravity_acc = [0,0,9.81],
         deltaT = .01,
         **kwargs

@@ -92,21 +92,20 @@ class RigidBody_tf:
 
             init_value = np.zeros((init_num, 4)).astype("float32")
             init_value[:,0] = 1
-            self._quaternion = tf.Variable(init_value, trainable=False, name="quaternion")
+            self._quat_tf = tf.Variable(init_value,       trainable=False)
+            self._angv_tf = tf.Variable(init_value[:,1:], trainable=False)
+            self._posi_tf = tf.Variable(init_value[:,1:], trainable=False)
+            self._velo_tf = tf.Variable(init_value[:,1:], trainable=False)
+
+            self._quaternion = tf.identity(self._quat_tf,name="quaternion")
+            self._angular_velocity = tf.identity(self._angv_tf, name="angular_velocity")
+            self._position = tf.identity(self._posi_tf, name="position")
+            self._velocity = tf.identity(self._velo_tf, name="velocity")
+
             tf.add_to_collection(collection_name, self._quaternion)
-
-            init_value = np.ones((init_num,3)).astype("float32")
-            self._angular_velocity = tf.Variable(init_value, trainable=False, name="angular_velocity")
             tf.add_to_collection(collection_name, self._angular_velocity)
-
-            init_value = np.ones((init_num,3)).astype("float32")
-            self._position = tf.Variable(init_value, trainable=False, name="position")
             tf.add_to_collection(collection_name, self._position)
-
-            init_value = np.ones((init_num,3)).astype("float32")
-            self._velocity = tf.Variable(init_value, trainable=False, name="velocity")
             tf.add_to_collection(collection_name, self._velocity)
-
 
     def create_physical_constants(self, inertia, mass, gravity_acc):
         inertia = np.diag(inertia).astype("float32")

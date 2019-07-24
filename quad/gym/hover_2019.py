@@ -13,10 +13,7 @@ def attitude2state(attitude):
     roto_v = roto.reshape((-1,9))
     pos = attitude[:,4:7]*0.5
     vs  = attitude[:,7:]*0.15
-    
-    # angular_velocity * 0.15
-
-    state = np.concatenate([roto_v, pos, vs,],axis=1)
+    state = np.concatenate([roto_v, pos, vs],axis=1)
     return state
 
 
@@ -41,10 +38,10 @@ class Quadrotors(ParticleMonitor, QuadrotorSwarm):
 
         self.apply_thrust(thrust)
         self.eval
-        angular_velocity = self.angular_velocity
-        np.clip(angular_velocity, -20, 20, angular_velocity)
-        velocity = self.velocity
-        np.clip(velocity, -5, 5, velocity)
+
+        #inplace clip
+        np.clip(self.angular_velocity, -20, 20, self.angular_velocity)
+        np.clip(self.velocity, -5, 5, self.velocity)
 
         r_q = cost.angular_cost(self._quaternion_goal, self.quaternion)
         r_p = cost.position_cost(self._position_goal, self.position)

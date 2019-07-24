@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from core.rigidbody_tf import RigidBody_tf
+from .core.rigidbody_tf import RigidBody_tf
 
 
 
@@ -57,25 +57,30 @@ class Quadrotor_tf(RigidBody_tf):
 
     def build_Eular_evaluate(self,deltaT):
         with tf.name_scope("Eular_Method"):
-            self.deltaT = tf.constant(np.float32(deltaT))
+            self.deltaT = tf.constant(np.float32(deltaT), name="deltaT")
             new_q = self._quaternion + self.d_quaternion*self.deltaT
             new_w = self._angular_velocity + self.d_angular_velocity*self.deltaT
             new_p = self._position + self.d_position*self.deltaT
             new_v = self._velocity + self.d_velocity*self.deltaT
 
-            self.new_q_norm = tf.norm(new_q, axis=1, keepdims=True)
+            self.new_q = new_q
+            self.new_w = new_w
+            self.new_p = new_p
+            self.new_v = new_v
 
+            self.new_q_norm = tf.norm(new_q, axis=1, keepdims=True)
             new_q = tf.math.l2_normalize(new_q, axis=1)
 
-            eval_q = tf.assign(self._quaternion, new_q, use_locking=True)
-            eval_w = tf.assign(self._angular_velocity, new_w, use_locking=True)
-            eval_p = tf.assign(self._position, new_p, use_locking=True)
-            eval_v = tf.assign(self._velocity, new_v, use_locking=True)
 
-        # evaluate = tf.group([eval_q, eval_w, eval_p, eval_v])
-        self.evaluate = tf.tuple([self._quaternion, self._angular_velocity, self._position, self._velocity],
-                                  name = "evaluate_q_w_p_v",
-                                  control_inputs=[eval_q, eval_w, eval_p, eval_v])
+            with tf.control_dependencies([new_q, new_w, new_p, new_v]):
+                eval_q = tf.assign(self._quat_tf, new_q)
+                eval_w = tf.assign(self._angv_tf, new_w)
+                eval_p = tf.assign(self._posi_tf, new_p)
+                eval_v = tf.assign(self._velo_tf, new_v)
+
+            with tf.control_dependencies([eval_q, eval_w, eval_p, eval_v]):
+                self.evaluate = tf.tuple([self._quat_tf, self._angv_tf, self._posi_tf, self._velo_tf],
+                                  name = "evaluate_q_w_p_v")
 
 
 

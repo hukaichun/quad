@@ -1,6 +1,6 @@
 import numpy as np
 import functools
-from core.rigidbody_np import RigidBody_np
+from .core.rigidbody_np import RigidBody_np
 
 
 
