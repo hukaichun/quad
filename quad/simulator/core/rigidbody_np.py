@@ -18,9 +18,9 @@ class RigidBody_np:
 	def creat_states_variable(self, init_num):
 		self._quaternion = np.zeros((init_num, 4))
 		self._quaternion[:,0] = 1
-		self._angular_velocity = np.ones((init_num,3))
-		self._position = np.ones((init_num,3))
-		self._velocity = np.ones((init_num,3))
+		self._angular_velocity = np.zeros((init_num,3))
+		self._position = np.zeros((init_num,3))
+		self._velocity = np.zeros((init_num,3))
 
 	def create_physical_constants(self, inertia, mass, gravity_acc):
 		self._inertia = np.diag(inertia)

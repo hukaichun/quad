@@ -77,7 +77,7 @@ class MavlinkListener:
 if __name__ == "__main__":
     from quad.gym import hover_2018
     s = MavlinkListener(8889)
-    q = hover_2018.Quadrotors(init_num=1)
+    q = hover_2018.Quadrotors(init_num=1, length=1, drag_coeff=0, inertia=[1,1,1], mass=3)
     q.render()
     count = 0
     tmp_time = 0
