@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+@tf.function(input_signature=(tf.TensorSpec(shape=[None, 4], dtype=tf.float32),))
 def quat2rotation(quaternion):
     with tf.name_scope("Quaternion2RotationMatrix"):
         w = quaternion[:,0]
@@ -33,7 +34,8 @@ def quat2rotation(quaternion):
 
 
 
-# d quaternion/ dt 
+@tf.function(input_signature=[tf.TensorSpec(shape=[None, 3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[None, 4], dtype=tf.float32)])
 def d_quaternion(angular_velocity, quaternion):
     with tf.name_scope("dq_dt"):
         w = quaternion[:,0]
@@ -47,12 +49,15 @@ def d_quaternion(angular_velocity, quaternion):
         m = tf.reshape(m, (-1, 3, 4)) 
         angular_velocity_m = tf.expand_dims(angular_velocity, 1)
         dq = 0.5*tf.matmul(angular_velocity_m, m)
-
     return tf.reshape(dq, (-1,4))
 
 
 
 # d angular_velocity / dt
+@tf.function(input_signature=[tf.TensorSpec(shape=[None, 3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[None, 3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
 def d_angular_velocity(torque,            
                        angular_velocity,
                        inertia,
@@ -60,22 +65,31 @@ def d_angular_velocity(torque,
     '''
            input     |  shape  
     -----------------|---------------
-    torque           | [batch, 1, 3]
-    angular_velocity | [batch, 1, 3]
-    inertia          | [batch, 3, 3] or [3,3]
-    inertiaInv       | [batch, 3, 3] or [3,3]
+    torque           | [batch, 3]
+    angular_velocity | [batch, 3]
+    inertia          | [3,3]
+    inertiaInv       | [3,3]
 
     '''
     with tf.name_scope("dw_dt"):
         torque_m = tf.expand_dims(torque, 1)
         angular_velocity_m = tf.expand_dims(angular_velocity, 1)
 
-        tmp = torque_m - tf.cross(angular_velocity_m, tf.matmul(angular_velocity_m, inertia))
+        tmp = torque_m - tf.linalg.cross(angular_velocity_m, tf.matmul(angular_velocity_m, inertia))
         d_w = tf.matmul(tmp, inertiaInv)
     return tf.reshape(d_w, (-1,3))
 
 
-
+@tf.function(input_signature=[tf.TensorSpec(shape=[None,4], dtype=tf.float32),
+                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                              tf.TensorSpec(shape=(), dtype=tf.float32)])
 def d_state(orientation, angular_velocity,
             position, velocity,
             body_torque, body_force, external_force,
@@ -103,7 +117,6 @@ def d_state(orientation, angular_velocity,
          d_v              | (batch, 3)
     '''
     with tf.name_scope("ds_dt"):
-
         rotation_matrix = quat2rotation(orientation)
         # rotation_matrix_t = tf.transpose(rotation_matrix, perm=(0,2,1))
 
@@ -120,6 +133,7 @@ def d_state(orientation, angular_velocity,
 
 
 def create_X_type_transform(length, drag_coeff):
+    import numpy as np
     sqrt2 = np.sqrt(2.)
     thrust_2_force = np.asarray(
         [[-length/sqrt2,  length/sqrt2,  drag_coeff, 0, 0, -1.],
@@ -131,6 +145,7 @@ def create_X_type_transform(length, drag_coeff):
 
 
 def create_states_variable(num):
+    import numpy as np
     init_value = np.zeros((init_num, 4)).astype("float32")
     init_value[:,0] = 1
     state = {
@@ -140,8 +155,10 @@ def create_states_variable(num):
         "velocity": tf.Variable(init_value[:,1:], trainable=False, name="velocity") 
     }
     return state
+    
 
 def create_physical_constants(inertia, mass, gravity_acc, num=None):
+    import numpy as np
     inertia = np.diag(inertia).astype("float32")
     inertiaInv = np.linalg.inv(inertia).astype("float32")
     mass = np.float32(mass)
