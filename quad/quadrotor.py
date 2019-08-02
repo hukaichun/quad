@@ -1,3 +1,4 @@
+import tensorflow as tf
 from quad.simulator.core import core_tf
 import numpy as np
 
@@ -23,17 +24,17 @@ class Quadrotor:
             self._velo = tf.identity(self._state["velocity"], name="velo_proxy")
 
         with tf.name_scope("Physical_Constants"):
-            self._physical_constants = core_tf.create_physical_constants(inertia, mass, gravity_acc, gravity_acc, num)
+            self._physical_constants = core_tf.create_physical_constants(inertia, mass, gravity_acc, num)
             self._physical_constants["thrust2force_matrix"] = core_tf.create_X_type_transform(length, drag_coeff)
             self._physical_constants["deltaT"] = tf.constant(np.float32(deltaT), name="deltaT")
 
 
-    @tf.function(input_signature=[tf.TensorSpec(shape=(None,4), dtype=tf.float32)])
     def evaluation(self, thrust):
         thrust = 4.*command + 0.25*self._physical_constants["gravity"]
         thrust = tf.clip(thrust, 0, 8)
         torq, forc = tf.matmul(thrust, self._physical_constants["thrust2force_matrix"])
 
+    def d_state(self, torq, forc):
         with tf.name_scope("euqation_of_motion"):
             d_state = core_tf.d_state(
                     self._quat, self._angv,
@@ -43,13 +44,15 @@ class Quadrotor:
                     self._physical_constants["mass"]
                 )
         dq, dw, dp, dv = d_state
+        return dq, dw, dp, dv
 
+'''
         with tf.name_scope("eualr_method"):
             deltaT = self._physical_constants["deltaT"]
             new_q = self._quat + dq*deltaT
-            new_w = self._angv + dw*deltaT
+            new_w = tf.clip_by_value(self._angv + dw*deltaT, -20, 20)
             new_p = self._posi + dp*deltaT
-            new_v = self._velo + dv*deltaT
+            new_v = tf.clip_by_value(self._velo + dv*deltaT, -5, 5)
             new_q = tf.math.l2_normalize(new_q, axis=1)
 
         with tf.control_dependencies([new_q, new_w, new_p, new_v]):
@@ -62,4 +65,4 @@ class Quadrotor:
             evaluate = tf.tuple([self._state["quaternion"], self._state["angular_velocity"], self._state["position"], self._state["velocity"]], name="evaluate_q_w_p_v")
 
         return evaluate
-
+'''

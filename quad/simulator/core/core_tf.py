@@ -141,20 +141,18 @@ def create_X_type_transform(length, drag_coeff):
          [ length/sqrt2,  length/sqrt2, -drag_coeff, 0, 0, -1.],
          [-length/sqrt2, -length/sqrt2, -drag_coeff, 0, 0, -1.]]
     ).astype("float32")
-    return tf.constant(thrust_2_force, name="thrust_2_force_trans_matrix")
+    return tf.Variable(thrust_2_force, trainable=False, name="thrust_2_force_trans_matrix")
 
 
 def create_states_variable(num):
     import numpy as np
-    init_value = np.zeros((init_num, 4)).astype("float32")
+    init_value = np.zeros((num, 4)).astype("float32")
     init_value[:,0] = 1
-    state = {
-        "quaternion": tf.Variable(init_value,       trainable=False, name="quaternion"),
-        "angular_velocity" : tf.Variable(init_value[:,1:], trainable=False, name="angular_velocity"),
-        "position": tf.Variable(init_value[:,1:], trainable=False, name="position"),
-        "velocity": tf.Variable(init_value[:,1:], trainable=False, name="velocity") 
-    }
-    return state
+
+    return (tf.Variable(init_value,       trainable=False, name="quaternion"),
+            tf.Variable(init_value[:,1:], trainable=False, name="angular_velocity"),
+            tf.Variable(init_value[:,1:], trainable=False, name="position"),
+            tf.Variable(init_value[:,1:], trainable=False, name="velocity")) 
     
 
 def create_physical_constants(inertia, mass, gravity_acc, num=None):
@@ -166,13 +164,10 @@ def create_physical_constants(inertia, mass, gravity_acc, num=None):
     if num is not None:
         gravity = np.broadcast_to(gravity, (num,3))
 
-    physical_constants = {
-        "inertia": tf.constant(inertia, name="intetia"),
-        "inertiaInv": tf.constant(inertiaInv, name="inverse_inertia"),
-        "mass": tf.constant(mass, name="mass"),
-        "gravity": tf.constant(gravity.astype("float32"), name="gravity")
-    }
-    return physical_constants
+    return ( tf.Variable(inertia, trainable=False, name="intetia"),
+             tf.Variable(inertiaInv, trainable=False, name="inverse_inertia"),
+             tf.Variable(mass, trainable=False, name="mass"),
+             tf.Variable(gravity.astype("float32"), trainable=False, name="gravity") )
 
 
 

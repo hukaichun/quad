@@ -13,8 +13,6 @@ def attitude2state(attitude):
     roto_v = roto.reshape((-1,9))
     pos = attitude[:,4:7]*0.5
     vs  = attitude[:,7:]*0.15
-    
-    # angular_velocity * 0.15
 
     state = np.concatenate([roto_v, vs, pos],axis=1)
     return state
