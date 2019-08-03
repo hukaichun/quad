@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-@tf.function(input_signature=(tf.TensorSpec(shape=[None, 4], dtype=tf.float32),))
+@tf.function(input_signature=(tf.TensorSpec(shape=[None, 4]),))
 def quat2rotation(quaternion):
     with tf.name_scope("Quaternion2RotationMatrix"):
         w = quaternion[:,0]
@@ -34,8 +34,8 @@ def quat2rotation(quaternion):
 
 
 
-@tf.function(input_signature=[tf.TensorSpec(shape=[None, 3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[None, 4], dtype=tf.float32)])
+@tf.function(input_signature=[tf.TensorSpec(shape=[None, 3]),
+                              tf.TensorSpec(shape=[None, 4])])
 def d_quaternion(angular_velocity, quaternion):
     with tf.name_scope("dq_dt"):
         w = quaternion[:,0]
@@ -54,10 +54,10 @@ def d_quaternion(angular_velocity, quaternion):
 
 
 # d angular_velocity / dt
-@tf.function(input_signature=[tf.TensorSpec(shape=[None, 3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[None, 3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[3,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
+@tf.function(input_signature=[tf.TensorSpec(shape=[None, 3]),
+                              tf.TensorSpec(shape=[None, 3]),
+                              tf.TensorSpec(shape=[3,3]),
+                              tf.TensorSpec(shape=[3,3])])
 def d_angular_velocity(torque,            
                        angular_velocity,
                        inertia,
@@ -80,16 +80,16 @@ def d_angular_velocity(torque,
     return tf.reshape(d_w, (-1,3))
 
 
-@tf.function(input_signature=[tf.TensorSpec(shape=[None,4], dtype=tf.float32),
-                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[None,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[3,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=[3,3], dtype=tf.float32),
-                              tf.TensorSpec(shape=(), dtype=tf.float32)])
+@tf.function(input_signature=[tf.TensorSpec(shape=[None,4]),
+                              tf.TensorSpec(shape=[None,3]),
+                              tf.TensorSpec(shape=[None,3]),
+                              tf.TensorSpec(shape=[None,3]),
+                              tf.TensorSpec(shape=[None,3]),
+                              tf.TensorSpec(shape=[None,3]),
+                              tf.TensorSpec(shape=[None,3]),
+                              tf.TensorSpec(shape=[3,3]),
+                              tf.TensorSpec(shape=[3,3]),
+                              tf.TensorSpec(shape=())])
 def d_state(orientation, angular_velocity,
             position, velocity,
             body_torque, body_force, external_force,
@@ -155,14 +155,12 @@ def create_states_variable(num):
             tf.Variable(init_value[:,1:], trainable=False, name="velocity")) 
     
 
-def create_physical_constants(inertia, mass, gravity_acc, num=None):
+def create_physical_constants(inertia, mass, gravity_acc):
     import numpy as np
     inertia = np.diag(inertia).astype("float32")
     inertiaInv = np.linalg.inv(inertia).astype("float32")
     mass = np.float32(mass)
     gravity = np.asarray(gravity_acc)*mass
-    if num is not None:
-        gravity = np.broadcast_to(gravity, (num,3))
 
     return ( tf.Variable(inertia, trainable=False, name="intetia"),
              tf.Variable(inertiaInv, trainable=False, name="inverse_inertia"),
