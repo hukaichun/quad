@@ -1,9 +1,9 @@
 import tensorflow as tf
-from . import util
+from quad.simulator.core import core_tf
 import numpy as np
 
 
-class Quadrotor_tf2(tf.Module):
+class Quadrotor(tf.Module):
     def __init__(self, 
             num, 
             length, 
@@ -13,28 +13,28 @@ class Quadrotor_tf2(tf.Module):
             gravity_acc, 
             deltaT, 
             name="Quadrotor"):
-        super(Quadrotor_tf2, self).__init__(name)
+        super(Quadrotor, self).__init__(name)
         with self.name_scope:
-            with tf.name_scope("STATE"):
+            with tf.name_scope("States"):
                 (self._quat, 
                  self._angv, 
                  self._posi, 
-                 self._velo) = util.create_states_variable(num)
+                 self._velo) = core_tf.create_states_variable(num)
 
-            with tf.name_scope("CONFIG"):
+            with tf.name_scope("Physical_Constants"):
                 (self._inertia,
                  self._inertiaInv,
                  self._mass,
-                 self._gravity) = util.create_physical_constants(inertia, mass, gravity_acc)
+                 self._gravity) = core_tf.create_physical_constants(inertia, mass, gravity_acc, num)
 
-                self._thrust2force_matrix = util.create_X_type_transform(length, drag_coeff)
-                self._deltaT = tf.Variable(np.float32(deltaT), trainable=False, name="deltaT")
-                self._num    = tf.Variable(num, trainable=False, name="number_of_quad")
+            with tf.name_scope("Properties"):
+                self._thrust2force_matrix = core_tf.create_X_type_transform(length, drag_coeff)
+                self._deltaT = tf.Variable(deltaT, trainable=False, name="deltaT")
 
 
 
     @tf.function(input_signature=(
-            tf.TensorSpec(shape=(None, 4), dtype=tf.float32),
+            tf.TensorSpec(shape=(None, 4)),
             tf.TensorSpec(shape=(), dtype=tf.bool)
         ))
     def step(self, command, update=True):
@@ -64,28 +64,21 @@ class Quadrotor_tf2(tf.Module):
 
     def d_state(self, torq, forc):
         with self.name_scope:
-            extF = tf.broadcast_to(self._gravity, (self._num, 3))
-
-            dq, dw, dp, dv = util.d_state(
+            dq, dw, dp, dv = core_tf.d_state(
                     self._quat, self._angv,
                     self._posi, self._velo,
-                    torq, forc, extF,
+                    torq, forc, self._gravity,
                     self._inertia, self._inertiaInv, self._mass
                 )
         return dq, dw, dp, dv
 
 
     def command2force(self, command):
-        new_command = tf.constant(4.,dtype=tf.float32)*command+\
-                        tf.constant(0.25,dtype=tf.float32)*self._mass*\
-                        tf.constant(9.81,dtype=tf.float32)
+        new_command = 4.*command+0.25*self._mass*9.81
         new_command = tf.clip_by_value(new_command, 0, 8)
         general_force = tf.matmul(new_command, self._thrust2force_matrix)
         torq, forc = tf.split(general_force, 2, axis=1)
         return torq, forc
-
-    def getfeature(self):
-        pass
 
     @property
     def quat(self):

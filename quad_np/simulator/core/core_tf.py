@@ -155,17 +155,19 @@ def create_states_variable(num):
             tf.Variable(init_value[:,1:], trainable=False, name="velocity")) 
     
 
-def create_physical_constants(inertia, mass, gravity_acc):
+def create_physical_constants(inertia, mass, gravity_acc, num=None):
     import numpy as np
     inertia = np.diag(inertia).astype("float32")
     inertiaInv = np.linalg.inv(inertia).astype("float32")
     mass = np.float32(mass)
-    gravity = np.asarray(gravity_acc).astype("float32")*mass
+    gravity = np.asarray(gravity_acc)*mass
+    if num is not None:
+        gravity = np.broadcast_to(gravity, (num,3))
 
     return ( tf.Variable(inertia, trainable=False, name="intetia"),
              tf.Variable(inertiaInv, trainable=False, name="inverse_inertia"),
              tf.Variable(mass, trainable=False, name="mass"),
-             tf.Variable(gravity, trainable=False, name="gravity") )
+             tf.Variable(gravity.astype("float32"), trainable=False, name="gravity") )
 
 
 

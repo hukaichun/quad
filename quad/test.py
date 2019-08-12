@@ -23,7 +23,7 @@ monitor = Monitor(quad_tf)
 quad_tf.quat = np.random.random((3,4))
 
 for _ in range(100):
-    command = np.random.random((1,4))
+    command = np.random.random((1,4)).astype("float32")
     quad_tf.step(command)
     monitor.show()
 
