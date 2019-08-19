@@ -34,6 +34,8 @@ def quat2rotation(quaternion):
 
 
 
+
+
 @tf.function(input_signature=[tf.TensorSpec(shape=[None, 3], dtype=tf.float32),
                               tf.TensorSpec(shape=[None, 4], dtype=tf.float32)])
 def d_quaternion(angular_velocity, quaternion):
@@ -50,6 +52,8 @@ def d_quaternion(angular_velocity, quaternion):
         angular_velocity_m = tf.expand_dims(angular_velocity, 1)
         dq = 0.5*tf.matmul(angular_velocity_m, m)
     return tf.reshape(dq, (-1,4))
+
+
 
 
 
@@ -78,6 +82,10 @@ def d_angular_velocity(torque,
         tmp = torque_m - tf.linalg.cross(angular_velocity_m, tf.matmul(angular_velocity_m, inertia))
         d_w = tf.matmul(tmp, inertiaInv)
     return tf.reshape(d_w, (-1,3))
+
+
+
+
 
 
 @tf.function(input_signature=[tf.TensorSpec(shape=[None,4], dtype=tf.float32),
@@ -132,6 +140,24 @@ def d_state(orientation, angular_velocity,
     return dq_dt, dw_dt, dp_dt, dv_dt
 
 
+@tf.function(input_signature=(tf.TensorSpec(shape=(1, 4)),
+                              tf.TensorSpec(shape=(None, 4))))
+def diff_quat(quat1, quat2):
+    w1, ijk1 = tf.split(quat1, [1,3], axis=1)
+    w2, ijk2 = tf.split(quat2, [1,3], axis=1)
+    w1 = tf.broadcast_to(w1, tf.shape(w2))
+    ijk1 = tf.broadcast_to(ijk1, tf.shape(ijk2))
+
+
+    diff_w   = tf.constant(1., dtype=tf.float32) - tf.abs(w1*w2 + tf.reduce_sum(ijk1*ijk2, axis=1, keepdims=True))
+    diff_ijk = w1*ijk2 + w2*ijk1 + tf.linalg.cross(ijk1, ijk2)
+    diff_q   = tf.concat([diff_w, diff_ijk], axis=1)
+
+    return diff_q
+
+
+
+
 def create_X_type_transform(length, drag_coeff):
     import numpy as np
     sqrt2 = np.sqrt(2.)
@@ -144,6 +170,10 @@ def create_X_type_transform(length, drag_coeff):
     return tf.Variable(thrust_2_force, trainable=False, name="thrust_2_force_trans_matrix")
 
 
+
+
+
+
 def create_states_variable(num):
     import numpy as np
     init_value = np.zeros((num, 4)).astype("float32")
@@ -154,6 +184,10 @@ def create_states_variable(num):
             tf.Variable(init_value[:,1:], trainable=False, name="position"),
             tf.Variable(init_value[:,1:], trainable=False, name="velocity")) 
     
+
+
+
+
 
 def create_physical_constants(inertia, mass, gravity_acc):
     import numpy as np
